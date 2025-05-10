@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>{{ profile.user }}</h1>
+    <h2>{{ profile.user.email}}</h2>
+    <a href="{% url 'video_list' %}">Back</a>
+    <a href="{% url 'logout' %}">Logout</a>
+</body>
+</html>
