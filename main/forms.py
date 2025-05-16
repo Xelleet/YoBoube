@@ -3,7 +3,7 @@ from .models import Video
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Profile
+from .models import Profile, Comment
 
 class VideoForm(forms.ModelForm):
     video_file = forms.FileField()
@@ -23,3 +23,8 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['avatar', 'bio']
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']

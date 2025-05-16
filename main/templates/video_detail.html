@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ video.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .video-container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #0f0f0f;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+
+        .comments-section {
+            margin-top: 30px;
+        }
+
+        .comment {
+            display: flex;
+            align-items: start;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comment img {
+            border-radius: 50%;
+        }
+
+        .comment-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comment strong {
+            font-size: 14px;
+            color: #000;
+        }
+
+        .comment small {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .comment p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+
+        .no-comments {
+            color: #777;
+        }
+
+        .comment-form {
+            margin-top: 20px;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 60px;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .comment-form button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .comment-form button:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+<a href="{% url 'video_list' %}">Video</a>
+<div class="video-container">
+    <h1>{{ video.title }}</h1>
+    <video controls>
+        <source src="{{ video.video_file.url }}" type="video/mp4">
+        Ваш браузер не поддерживает тег video.
+    </video>
+    <form method="post" action="{% url 'toggle_like' video.pk %}" class="reaction">
+        {% csrf_token %}
+        <input type="hidden" name="reaction_type" value="like">  <!-- Важно! -->
+        <button type="submit">
+            {{ video.likes_count}} {% if is_liked %} 👍 {% else %} 👍🏻 {% endif %}
+        </button>
+    </form>
+    <form method="post" action="{% url 'toggle_like' video.pk %}" class="reaction">
+        {% csrf_token %}
+        <input type="hidden" name="reaction_type" value="dislike">  <!-- Важно! -->
+        <button type="submit">
+            {{ video.dislikes_count}} {% if is_disliked %} 👿 {% else %} 😡 {% endif %}
+        </button>
+    </form>
+
+    <div class="comments-section">
+        <h2>Комментарии</h2>
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="comment">
+                    {% if comment.user.profile.avatar %}
+                        <img src="{{ comment.user.profile.avatar.url }}" width="50" alt="Avatar">
+                    {% else %}
+                        <img src="https://kcentr.servisen.su/uploads/images/f4ebcddc893e3942a33ea5b976792d62.png " width="50" alt="No avatar">
+                    {% endif %}
+                    <div class="comment-content">
+                        <strong>{{ comment.user.username }}</strong>
+                        <small>{{ comment.created_at }}</small>
+                        <p>{{ comment.text }}</p>
+                        <form method="post" action="{% url 'comment_toggle_like' video.pk comment.id %}">
+                            <button type="submit">{{ comment.likes_count}}❤</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-comments">Нет комментариев.</p>
+        {% endif %}
+    </div>
+
+    <div class="comment-form">
+        <h3>Оставить комментарий</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Отправить</button>
+        </form>
+    </div>
+    <a href="{% url 'delete_video' video.pk %}">Delete</a>
+</div>
+
+</body>
+</html>
