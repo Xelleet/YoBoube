@@ -11,9 +11,18 @@
             padding: 20px;
         }
 
-        .video-container {
-            max-width: 800px;
+        .video-detail-container {
+            display: flex;
+            max-width: 1200px;
             margin: auto;
+            gap: 20px;
+        }
+
+        .main-video {
+            flex: 3;
+        }
+
+        .video-container {
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -101,65 +110,150 @@
         .comment-form button:hover {
             background-color: #cc0000;
         }
+
+        .reactions {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .reactions button {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #e0e0e0;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .reactions button:hover {
+            background-color: #d0d0d0;
+        }
+
+        /* Сайдбар */
+        .suggested-videos {
+            flex: 1;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .suggested-video-card {
+            margin-bottom: 15px;
+        }
+
+        .suggested-thumbnail {
+            width: 100%;
+            height: 60px;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #777;
+            border-radius: 4px;
+        }
+
+        .suggested-title {
+            font-size: 14px;
+            margin-top: 5px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
-<a href="{% url 'video_list' %}">Video</a>
-<div class="video-container">
-    <h1>{{ video.title }}</h1>
-    <video controls>
-        <source src="{{ video.video_file.url }}" type="video/mp4">
-        Ваш браузер не поддерживает тег video.
-    </video>
-    <form method="post" action="{% url 'toggle_like' video.pk %}" class="reaction">
-        {% csrf_token %}
-        <input type="hidden" name="reaction_type" value="like">  <!-- Важно! -->
-        <button type="submit">
-            {{ video.likes_count}} {% if is_liked %} 👍 {% else %} 👍🏻 {% endif %}
-        </button>
-    </form>
-    <form method="post" action="{% url 'toggle_like' video.pk %}" class="reaction">
-        {% csrf_token %}
-        <input type="hidden" name="reaction_type" value="dislike">  <!-- Важно! -->
-        <button type="submit">
-            {{ video.dislikes_count}} {% if is_disliked %} 👿 {% else %} 😡 {% endif %}
-        </button>
-    </form>
 
-    <div class="comments-section">
-        <h2>Комментарии</h2>
-        {% if comments %}
-            {% for comment in comments %}
-                <div class="comment">
-                    {% if comment.user.profile.avatar %}
-                        <img src="{{ comment.user.profile.avatar.url }}" width="50" alt="Avatar">
-                    {% else %}
-                        <img src="https://kcentr.servisen.su/uploads/images/f4ebcddc893e3942a33ea5b976792d62.png " width="50" alt="No avatar">
-                    {% endif %}
-                    <div class="comment-content">
-                        <strong>{{ comment.user.username }}</strong>
-                        <small>{{ comment.created_at }}</small>
-                        <p>{{ comment.text }}</p>
-                        <form method="post" action="{% url 'comment_toggle_like' video.pk comment.id %}">
-                            <button type="submit">{{ comment.likes_count}}❤</button>
-                        </form>
+<a href="{% url 'video_list' %}">К списку видео</a>
+
+<div class="video-detail-container">
+    <!-- Основное видео -->
+    <div class="main-video">
+        <div class="video-container">
+            <h1>{{ video.title }}</h1>
+            <video controls>
+                <source src="{{ video.video_file.url }}" type="video/mp4">
+                Ваш браузер не поддерживает тег video.
+            </video>
+
+            <!-- Лайки/дизлайки -->
+            <div class="reactions">
+                <form method="post" action="{% url 'toggle_like' video.pk %}" class="reaction">
+                    {% csrf_token %}
+                    <input type="hidden" name="reaction_type" value="like">
+                    <button type="submit">
+                        {{ video.likes_count }} {% if is_liked %} 👍 {% else %} 👍🏻 {% endif %}
+                    </button>
+                </form>
+                <form method="post" action="{% url 'toggle_like' video.pk %}" class="reaction">
+                    {% csrf_token %}
+                    <input type="hidden" name="reaction_type" value="dislike">
+                    <button type="submit">
+                        {{ video.dislikes_count }} {% if is_disliked %} 👿 {% else %} 😡 {% endif %}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Комментарии -->
+            <div class="comments-section">
+                <h2>Комментарии</h2>
+                {% if comments %}
+                    {% for comment in comments %}
+                        <div class="comment">
+                            {% if comment.user.profile.avatar %}
+                                <img src="{{ comment.user.profile.avatar.url }}" width="50" alt="Avatar">
+                            {% else %}
+                                <img src="https://kcentr.servisen.su/uploads/images/f4ebcddc893e3942a33ea5b976792d62.png " width="50" alt="No avatar">
+                            {% endif %}
+                            <div class="comment-content">
+                                <strong>{{ comment.user.username }}</strong>
+                                <small>{{ comment.created_at }}</small>
+                                <p>{{ comment.text }}</p>
+                                <form method="post" action="{% url 'comment_toggle_like' video.pk comment.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit">{{ comment.likes_count }} ❤</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-comments">Нет комментариев.</p>
+                {% endif %}
+            </div>
+
+            <!-- Форма комментария -->
+            <div class="comment-form">
+                <h3>Оставить комментарий</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit">Отправить</button>
+                </form>
+            </div>
+
+            <!-- Удаление видео -->
+            <a href="{% url 'delete_video' video.pk %}">Удалить видео</a>
+        </div>
+    </div>
+
+    <!-- Боковая панель с рекомендациями -->
+    <aside class="suggested-videos">
+        <h3>Смотрите также</h3>
+        {% for v in suggested_videos %}
+            <div class="suggested-video-card">
+                <a href="{% url 'video_detail' v.pk %}">
+                    <div class="suggested-thumbnail">
+                        <span>▶️</span>
                     </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p class="no-comments">Нет комментариев.</p>
-        {% endif %}
-    </div>
-
-    <div class="comment-form">
-        <h3>Оставить комментарий</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Отправить</button>
-        </form>
-    </div>
-    <a href="{% url 'delete_video' video.pk %}">Delete</a>
+                    <div class="suggested-title">{{ v.title }}</div>
+                </a>
+            </div>
+        {% empty %}
+            <p>Нет других видео</p>
+        {% endfor %}
+    </aside>
 </div>
 
 </body>

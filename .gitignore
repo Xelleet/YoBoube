@@ -1,1 +1,57 @@
-media
+# Виртуальное окружение Python
+venv/
+env/
+.pyenv/
+
+# Кэширование Python
+pycache
+*.pyc
+*.pyo
+*.pyd
+*.pyc~
+*.pyc.*
+
+# Логи и временные файлы
+*.log
+*.sqlite3
+db.sqlite3
+*.pot
+*.mo
+*.po~
+
+# Файлы сред разработки (IDE)
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Медиа и статика (если не используешь Git для их хранения)
+/media/
+/staticfiles/
+/assets/
+
+# Node.js (если используешь npm или yarn)
+node_modules/
+dist/
+build/
+yarn-error.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# macOS специфичные файлы
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows специфичные файлы
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

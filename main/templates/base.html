@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} YuTabe {% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #202020;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .profile-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .profile-link img {
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .video-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .video-card video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .video-card h2 {
+            font-size: 16px;
+            padding: 10px 15px;
+            margin: 0;
+            color: #0f0f0f;
+        }
+
+        .video-card a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+    <h1>Видео</h1>
+
+    <!-- Строка поиска -->
+    <form method="get" action="{% url 'search_videos' %}" class="search-form">
+        <input type="text" name="q" placeholder="Поиск видео..." value="{{ request.GET.q }}">
+        <button type="submit">🔍</button>
+    </form>
+
+    {% if profile.avatar %}
+        <a href="{% url 'profile' %}" class="profile-link">
+            <img src="{{ profile.avatar.url }}" alt="Аватар" width="40">
+        </a>
+    {% else %}
+        <a href="{% url 'profile' %}" class="profile-link">
+            {{ profile.user.username }}
+        </a>
+    {% endif %}
+</header>
+<main class="content">
+    {% block content %}
+    {% endblock %}
+</main>
+
+</body>
+</html>

@@ -14,4 +14,5 @@ urlpatterns = [
     path('video/<int:pk>/like/', views.toggle_like, name='toggle_like'),
     path('video/<int:pk>/comment_like/<int:id>', views.toggle_comment_like, name='comment_toggle_like'),
     path('video/<int:pk>/delete/', views.delete_video, name='delete_video'),
+    path('search_videos/', views.search_videos, name='search_videos'),
 ]

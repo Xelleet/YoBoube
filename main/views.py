@@ -3,11 +3,13 @@ from .models import Video, Profile, Like, Comment, CommentLike
 from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt #Для продакшена это самоубийство, по ходу времени лучше снести
+from django.db.models import F, Value, IntegerField
+from django.db.models.functions import Coalesce
 
 
 @login_required() #Временно
 def video_list(request):
-    videos = Video.objects.all()
+    videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
     return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
 
 def upload_video(request):
@@ -116,6 +118,7 @@ def toggle_comment_like(request, pk, id):
 def video_detail(request, pk):
     video = get_object_or_404(Video, pk=pk)
     comments = video.comments.all()
+    suggested_videos = Video.objects.exclude(pk=pk).annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')[:10]
     try:
         like = Like.objects.get(user_id=request.user.id, video_id=pk)
         if like.reaction_type == 'like':#Как бы дебильно это не выглядело
@@ -142,9 +145,17 @@ def video_detail(request, pk):
             return redirect('login')
     else:
         form = CommentForm()
-    return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked})
+    return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos})
 
 def delete_video(request, pk):
     video = get_object_or_404(Video, id=pk)
     video.delete()
     return redirect('video_list')
+
+def search_videos(request):
+    query = request.GET.get('q')
+    if query:
+        videos = Video.objects.filter(title__icontains=query).annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
+    else:
+        videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
+    return render(request, 'search_result.html', {'videos': videos})
