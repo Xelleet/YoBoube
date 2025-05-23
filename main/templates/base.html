@@ -78,11 +78,19 @@
             color: inherit;
         }
 
+        .reel-card{
+            aspect-ratio: 9 / 16;
+            width: 100%;
+            max-height: 100vh;
+            object-fit: cover;
+        }
+
     </style>
 </head>
 <body>
     <header>
-    <h1>Видео</h1>
+    <h1><a href="{% url 'video_list' %}">YoBoube</a> </h1>
+    <h2><a href="{% url 'reels_list' %}">Trash</a> </h2>
 
     <!-- Строка поиска -->
     <form method="get" action="{% url 'search_videos' %}" class="search-form">
@@ -90,15 +98,19 @@
         <button type="submit">🔍</button>
     </form>
 
-    {% if profile.avatar %}
-        <a href="{% url 'profile' %}" class="profile-link">
-            <img src="{{ profile.avatar.url }}" alt="Аватар" width="40">
-        </a>
+    {% if profile %}
+        {% if profile.avatar %}
+            <a href="{% url 'profile' %}" class="profile-link">
+                <img src="{{ profile.avatar.url }}" alt="Аватар" width="40">
+            </a>
+        {% else %}
+            <a href="{% url 'profile' %}" class="profile-link">
+                {{ profile.user.username }}
+            </a>
+        {% endif %}
     {% else %}
-        <a href="{% url 'profile' %}" class="profile-link">
-            {{ profile.user.username }}
-        </a>
-    {% endif %}
+        <a href="{% url 'login' %}">Войти</a>
+    {%endif %}
 </header>
 <main class="content">
     {% block content %}

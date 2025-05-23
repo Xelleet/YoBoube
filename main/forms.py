@@ -1,5 +1,5 @@
 from django import forms
-from .models import Video
+from .models import Video, Reels
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -10,6 +10,11 @@ class VideoForm(forms.ModelForm):
 
     class Meta:
         model = Video
+        fields = ['title', 'video_file']
+
+class ReelsForm(forms.ModelForm):
+    class Meta:
+        model = Reels
         fields = ['title', 'video_file']
 
 class RegisterForm(UserCreationForm):

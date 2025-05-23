@@ -1,0 +1,17 @@
+{% extends 'base.html'  %}
+{% block title %} YuTabe {% endblock %}
+{% block content %}
+    <main>
+        <div class="reels-grid">
+        {% for reel in reels %}
+                <div class="reel-card">
+                    <video controls>
+                        <source src="{{ reel.video_file.url }}" type="video/mp4">
+                        Ваш браузер не поддерживает тег video.
+                    </video>
+                    <h2>{{ reel.title }}</h2>
+                </div>
+        {% endfor %}
+    </div>
+    </main>
+{% endblock %}
