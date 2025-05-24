@@ -251,8 +251,7 @@
                 </form>
             </div>
 
-            {% if video.uploader == profile %}
-                <!-- Удаление видео -->
+            {% if video.uploader == profile.user %}
                 <a href="{% url 'delete_video' video.pk %}">Удалить видео</a>
             {% endif %}
         </div>

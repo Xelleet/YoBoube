@@ -2,6 +2,48 @@
 {% block title %} YuTabe {% endblock %}
 {% block content %}
 
+<style>
+    .reels-section {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+        padding: 20px 0;
+    }
+
+    .reel-card {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 9/16;
+        background: #000;
+    }
+
+    .reel-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .reel-overlay {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+    }
+
+    .reel-badge {
+        background: #f00;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+</style>
+
 <main>
     <div class="video-grid">
         {% for video in videos %}
@@ -14,6 +56,24 @@
                     <h2>{{ video.title }}</h2>
                 </div>
             </a>
+        {% if forloop.counter == 2 %}
+            <div class="reels-section">
+                {% for reel in reels %}
+                    <a href="{% url 'reel' reel.pk %}" class="reel-link">
+                        <div class="reel-card">
+                            <div class="reel-player">
+                                <video controls class="reel-video">
+                                    <source src="{{ reel.video_file.url }}" type="video/mp4">
+                                </video>
+                                <div class="reel-overlay">
+                                    <span class="reel-badge">Reel</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% endfor %}
     </div>
 </main>

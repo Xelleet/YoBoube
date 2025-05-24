@@ -13,11 +13,12 @@ import os
 #Наши видео и прости господи шортсы
 def video_list(request):
     videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=False) #Составляем рекомендации (у нас нет алгоритмов гугла, так что выглядит колхозно
+    reels = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=True)
     try:
         profile = Profile.objects.get(user=request.user)
     except:
         profile = None #В случае, если мы ещё не зарегистрированы, или же вышли из аккаунта
-    return render(request, 'video_list.html', {'videos': videos, 'profile': profile})
+    return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile})
 
 def reels_list(request):
     reels = Video.objects.filter(is_short=True)
@@ -215,6 +216,9 @@ def video_detail(request, pk):
     else:
         form = CommentForm()
     return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed})
+
+def reel(request, pk):
+    return pk #ToDO сделать логику рилсов
 
 def delete_video(request, pk):
     video = get_object_or_404(Video, id=pk)

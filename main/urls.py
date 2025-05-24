@@ -12,6 +12,7 @@ urlpatterns = [
     #path('profile/', views.profile, name='profile'),
     path('edit_profile/', views.edit_profile, name='edit_profile'),
     path('video/<int:pk>/', views.video_detail, name='video_detail'),
+    path('reel/<int:pk>', views.reel, name='reel'),
     path('reel/<int:pk>/', views.reels_list, name='reels_detail'),
     path('video/<int:pk>/like/', views.toggle_like, name='toggle_like'),
     path('video/<int:pk>/comment_like/<int:id>', views.toggle_comment_like, name='comment_toggle_like'),
