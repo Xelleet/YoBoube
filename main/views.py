@@ -1,13 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView
+from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView, Subscription, User
 from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm, ReelsForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt #Для продакшена это самоубийство, по ходу времени лучше снести
 from django.db.models import F, Value, IntegerField
 from django.db.models.functions import Coalesce
 from django.db.models import ExpressionWrapper, FloatField
-from django.core.files.uploadedfile import UploadedFile
-from django.contrib.sessions.models import Session
 from ffprobe import FFProbe
 import os
 
@@ -38,6 +36,8 @@ def upload_video(request):
             video = request.FILES['video_file']
             temp_path = 'temp_reel_video.mp4'
 
+            video.uploader = request.user
+
             with open(temp_path, 'wb+') as destination:
                 for chunk in video.chunks():
                     destination.write(chunk)
@@ -67,47 +67,13 @@ def upload_video(request):
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
 
+            form.instance.uploader = request.user
             form.save()
             return redirect('video_list')
     else:
         form = VideoForm()
 
     return render(request, 'upload_video.html', {'form': form})
-
-def upload_reels(request):
-    if request.method == 'POST':
-        form = ReelsForm(request.POST, request.FILES)
-        if form.is_valid():
-            #Проверка на то, что у нас реально рилс, а не, скажем, часовая лекция
-            video = request.FILES['video_file']
-            temp_path = 'temp_reel_video.mp4'
-            with open(temp_path, 'wb+') as destination:
-                for chunk in video.chunks():
-                    destination.write(chunk)
-            try:
-                info = FFProbe(temp_path)
-                duration = None
-                for stream in info.streams:
-                    if stream.is_video():
-                        duration = float(stream.duration_seconds())
-                        break
-                    if duration is None:
-                        raise ValueError("Видео не найдено в файле")
-                    print(f"duration: {duration}s")
-
-                    if duration > 60:
-                        os.remove(temp_path)
-                        return redirect('video_list') #Временно
-                    form.save()
-            except Exception as e:
-                print(f"Reels error : {e}")
-            finally:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-    else:
-        form = ReelsForm()
-
-    return render(request, 'upload_reels.html', {'form': form})
 
 
 #Профиль
@@ -122,12 +88,6 @@ def register_view(request):
 
     return render(request, 'register.html', {'form': form})
 
-def profile(request):
-    if request.user.is_authenticated:
-        return render(request, 'Profile.html', {'profile': Profile.objects.get(user=request.user)})
-    else:
-        return redirect('login')
-
 @login_required()
 def edit_profile(request):
     profile = request.user.profile
@@ -135,7 +95,7 @@ def edit_profile(request):
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect('profile')
+            return redirect('user_profile', user_id=profile.id)
     else:
         form = ProfileForm()
     return render(request, 'edit_profile.html', {'form': form})
@@ -236,6 +196,10 @@ def video_detail(request, pk):
         is_liked = False
         is_disliked = False
 
+    is_subscribed = False
+    if request.user.is_authenticated and request.user != video.uploader:
+        is_subscribed = video.uploader.subscribers.filter(subscriber=request.user).exists()
+
     #Если мы хотим оставить свой чудесный комментарий
     if request.method == 'POST':
         if request.user.is_authenticated:
@@ -250,7 +214,7 @@ def video_detail(request, pk):
             return redirect('login')
     else:
         form = CommentForm()
-    return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos})
+    return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed})
 
 def delete_video(request, pk):
     video = get_object_or_404(Video, id=pk)
@@ -264,3 +228,25 @@ def search_videos(request):
     else:
         videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
     return render(request, 'search_result.html', {'videos': videos})
+
+@login_required()
+def toggle_subscription(request, user_id):
+    channel = get_object_or_404(User, id=user_id)
+
+    if request.user == channel:
+        return redirect('profile')
+
+    subscription, created = Subscription.objects.get_or_create(subscriber=request.user, channel=channel)
+
+    if not created:
+        subscription.delete()
+
+    return redirect('user_profile', user_id=channel.id)
+
+def user_profile(request, user_id):
+    profile = Profile.objects.get(id=user_id)
+    subs = Subscription.objects.filter(subscriber_id=profile.user.id)
+    is_subscribed = False
+    if request.user.is_authenticated and request.user != profile:
+        is_subscribed = profile.user.subscribers.filter(subscriber=request.user).exists()
+    return render(request, 'user_profile.html', {'user': request.user,'profile': Profile.objects.get(user=request.user), 'user_profile': Profile.objects.get(id=user_id), 'is_subscribed': is_subscribed, 'subs': subs})

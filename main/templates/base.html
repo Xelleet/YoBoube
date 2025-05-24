@@ -100,11 +100,11 @@
 
     {% if profile %}
         {% if profile.avatar %}
-            <a href="{% url 'profile' %}" class="profile-link">
+            <a href="{% url 'user_profile' profile.id %}" class="profile-link">
                 <img src="{{ profile.avatar.url }}" alt="Аватар" width="40">
             </a>
         {% else %}
-            <a href="{% url 'profile' %}" class="profile-link">
+            <a href="{% url 'user_profile' profile.id %}" class="profile-link">
                 {{ profile.user.username }}
             </a>
         {% endif %}

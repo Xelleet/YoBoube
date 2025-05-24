@@ -22,6 +22,7 @@ class Video(models.Model):
     dislikes_count = models.PositiveIntegerField(default=0)
     views = models.PositiveIntegerField(default=0)
     is_short = models.BooleanField(default=False)
+    uploader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_videos', null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -81,3 +82,14 @@ class CommentLike(models.Model):
 
     class Meta:
         unique_together = ('user', 'comment')
+
+class Subscription(models.Model):
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    channel = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscribers')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('subscriber', 'channel')
+
+    def __str__(self):
+        return f"{self.subscriber.username} подписан на {self.channel.username}"

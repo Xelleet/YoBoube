@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+    <h1>Профиль</h1>
+</header>
+
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #202020;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .profile-avatar img {
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border: 4px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .profile-info h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #0f0f0f;
+        }
+
+        .profile-info p {
+            color: #666;
+            margin: 5px 0 20px 0;
+        }
+
+        .profile-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .profile-actions a {
+            text-decoration: none;
+            background-color: #ff0000;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .profile-actions a:hover {
+            background-color: #cc0000;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+            font-size: 14px;
+        }
+    </style>
+
+<div class="profile-container">
+    <div class="profile-avatar">
+        {% if user_profile.avatar %}
+            <img src="{{ user_profile.avatar.url }}" alt="Аватар">
+        {% else %}
+            <img src="https://kcentr.servisen.su/uploads/images/f4ebcddc893e3942a33ea5b976792d62.png " alt="Нет аватара">
+        {% endif %}
+    </div>
+
+    <form action="{% url 'toggle_subscription' user_profile.user.id %}" method="post">
+    {% csrf_token %}
+    {% if user != user_profile.user %}
+        {% if is_subscribed %}
+            <button type="submit">Отписаться</button>
+        {% else %}
+            <button type="submit">Подписаться</button>
+        {% endif %}
+    {% endif %}
+    <p>Подписчиков: {{ user_profile.user.subscribers.count }}</p>
+</form>
+
+    <div class="profile-info">
+        <h2>{{ user_profile.user }}</h2>
+        <p>Биография: {{ user_profile.bio }}</p>
+        Подписан на:
+        <ul>
+            {% for sub in subs %}
+            <li><a href="{% url 'user_profile' sub.id %}">{{sub.channel}}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% if user == user_profile.user %}
+        <div class="profile-actions">
+            <a href="{% url 'video_list' %}">Главная</a>
+            <a href="{% url 'upload_video' %}">Загрузить видео</a>
+            <a href="{% url 'edit_profile' %}">Редактировать</a>
+            <a href="{% url 'logout' %}">Выйти</a>
+        </div>
+    {% endif %}
+</div>
+
+<footer>
+    &copy; 2025 Video Platform
+</footer>
+
+{% endblock %}

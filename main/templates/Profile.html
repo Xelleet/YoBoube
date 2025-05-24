@@ -104,7 +104,14 @@
         <h2>{{ profile.user }}</h2>
         <p>{{ profile.user.email }}</p>
     </div>
-
+    <h1>Мои подписки</h1>
+    <ul>
+        {% for sub in subscriptions %}
+        <li><a href="{% url 'user_profile' sub.channel.id %}">{{ sub.channel.username}}</a></li>
+            {% empty %}
+                <li>Вы ни на кого не подписаны</li>
+        {% endfor %}
+    </ul>
     <div class="profile-actions">
         <a href="{% url 'video_list' %}">Главная</a>
         <a href="{% url 'upload_video' %}">Загрузить видео</a>

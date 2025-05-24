@@ -179,6 +179,23 @@
             </video>
             <span>Просмотры: {{video.get_views}} </span>
 
+            <div class="uploader-info">
+                Добавил:
+                <a href="{% url 'user_profile' user_id=video.uploader.id %}">
+                    {{ video.uploader.username }}
+                </a>
+                {% if request.user in video.uploader.subscribers.all %}
+                    <form method="post" action="{% url 'toggle_subscription' video.uploader.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        {% if is_subscribed %}
+                            <button type="submit">Отписаться</button>
+                        {% else %}
+                            <button type="submit">Подписаться</button>
+                        {% endif %}
+                    </form>
+                {% endif %}
+            </div>
+
             <!-- Лайки/дизлайки -->
             <div class="reactions">
                 <form method="post" action="{% url 'toggle_like' video.pk %}" class="reaction">
@@ -234,8 +251,10 @@
                 </form>
             </div>
 
-            <!-- Удаление видео -->
-            <a href="{% url 'delete_video' video.pk %}">Удалить видео</a>
+            {% if video.uploader == profile %}
+                <!-- Удаление видео -->
+                <a href="{% url 'delete_video' video.pk %}">Удалить видео</a>
+            {% endif %}
         </div>
     </div>
 

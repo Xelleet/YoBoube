@@ -28,8 +28,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 MEDIA_URL = '/media/'
-LOGIN_REDIRECT_URL = '/profile/'
-LOGIN_URL = '/profile/'
+LOGIN_REDIRECT_URL = '/user_profile/'
+LOGIN_URL = '/user_profile/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Application definition
