@@ -20,4 +20,9 @@ urlpatterns = [
     path('search_videos/', views.search_videos, name='search_videos'),
     path('subscribe/<int:user_id>', views.toggle_subscription, name='toggle_subscription'),
     path('user_profile/<int:user_id>', views.user_profile, name='user_profile'),
+    path('find_liked_video/', views.find_liked_video, name='find_liked_video'),
+    path('history/', views.viewing_history, name='viewing_history'),
+    path('user_videos/', views.user_videos, name='user_videos'),
+    path('watch_later/<int:video_id>', views.toggle_watch_later, name='toggle_watch_later'),
+    path('watchlater/', views.watch_later_list, name='watch_later'),
 ]

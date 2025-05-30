@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView, Subscription, User
+from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView, Subscription, User, WatchLater
 from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm, ReelsForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt #Для продакшена это самоубийство, по ходу времени лучше снести
@@ -8,7 +8,7 @@ from django.db.models.functions import Coalesce
 from django.db.models import ExpressionWrapper, FloatField
 from ffprobe import FFProbe
 import os
-
+from django.views.decorators.cache import never_cache
 
 #Наши видео и прости господи шортсы
 def video_list(request):
@@ -171,10 +171,12 @@ def video_detail(request, pk):
     session_key = request.session.session_key or request.COOKIES.get('sessionid')
     if session_key and not VideoView.objects.filter(video=video, session_key=session_key).exists():
         #Добавляем просмотры к видео, если у нас "уникальный" пользователь (чтобы как в VK видео не было)
-        VideoView.objects.create(video=video, session_key=session_key)
+        VideoView.objects.create(video=video, session_key=session_key, user=request.user)
         video.views += 1
         video.save(update_fields=['views'])
     comments = video.comments.all()
+
+    is_saved = WatchLater.objects.filter(user=request.user, video=video).exists()
 
     WEIGHT_VIEWS = 0.01 #Цена или вес просмотра (чтобы новички на платформе имели шансы попасть в рекомендации например)
 
@@ -215,7 +217,7 @@ def video_detail(request, pk):
             return redirect('login')
     else:
         form = CommentForm()
-    return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed})
+    return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed, 'is_saved': is_saved})
 
 def reel(request, pk):
     return pk #ToDO сделать логику рилсов
@@ -247,6 +249,7 @@ def toggle_subscription(request, user_id):
 
     return redirect('user_profile', user_id=channel.id)
 
+@login_required()
 def user_profile(request, user_id):
     profile = Profile.objects.get(id=user_id)
     subs = Subscription.objects.filter(subscriber_id=profile.user.id)
@@ -254,3 +257,45 @@ def user_profile(request, user_id):
     if request.user.is_authenticated and request.user != profile:
         is_subscribed = profile.user.subscribers.filter(subscriber=request.user).exists()
     return render(request, 'user_profile.html', {'user': request.user,'profile': Profile.objects.get(user=request.user), 'user_profile': Profile.objects.get(id=user_id), 'is_subscribed': is_subscribed, 'subs': subs})
+
+def find_liked_video(request):
+    likes = Like.objects.filter(user=request.user)
+    return render(request, 'liked_video_list.html', {'likes': likes})
+
+@login_required
+@never_cache
+def viewing_history(request):
+    user = request.user
+    history = VideoView.objects.filter(user=user).select_related('video').order_by('-viewed_at')[:50]
+    print(history)
+    context = {
+        'history': history,
+        'user': user,
+        'total_views': history.count(),
+        'last_viewed': history.first().viewed_at if history.exists() else None,
+    }
+
+    return render(request, 'video_history.html', context)
+
+@login_required()
+def user_videos(request):
+    videos = Video.objects.filter(uploader=request.user)
+    return render(request, 'user_videos.html', {'videos': videos})
+
+@login_required()
+def toggle_watch_later(request, video_id):
+    video = get_object_or_404(Video, id=video_id)
+    watch_item, created = WatchLater.objects.get_or_create(user=request.user, video=video)
+
+    if not created:
+        watch_item.delete()
+        message = "Видео удалено из <Посмотрю позже>"
+    else:
+        message = "Видео добавлено в <Посмотрю позже>"
+
+    return redirect('video_detail', pk=video_id)
+
+@login_required()
+def watch_later_list(request):
+    videos = WatchLater.objects.filter(user=request.user).select_related('video')
+    return render(request, 'watch_later.html', {'videos': videos})

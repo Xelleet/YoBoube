@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Посмотрю позже{% endblock %}
+{% block content %}
+<h2>Посмотрю позже</h2>
+
+{% if videos %}
+    <ul>
+        {% for item in videos %}
+            <li>
+                <a href="{% url 'video_detail' item.video.id %}">
+                    {{ item.video.title }}
+                </a>
+                <form action="{% url 'toggle_watch_later' item.video.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit">Удалить</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Вы ещё ничего не добавили.</p>
+{% endif %}
+{% endblock %}

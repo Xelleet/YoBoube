@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %} YuTabe {% endblock %}
+{% block content %}
+    <div>
+      {% if likes %}
+      <ul>
+        {% for video in likes %}
+        <li>
+          <a href="{% url 'video_detail' video.pk %}">
+            <video controls>
+              <source src="{{ video.video_file.url }}" type="video/mp4">
+            </video>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>Вы ещё ничего не лайкали</p>
+      {% endif %}
+    </div>
+{% endblock %}

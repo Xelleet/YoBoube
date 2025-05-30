@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %} YuTabe {% endblock %}
+{% block content %}
+    <div>
+        {% if videos %}
+        <ul>
+            {% for video in videos %}
+            <li>
+                <a href="{% url 'video_detail' video.pk %}">
+                <video controls>
+                    <source src="{{ video.video_file.url}}" type="video/mp4">
+                </video>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p>Вы ещё не загрузили ни одного видео</p>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -31,7 +31,7 @@ class Video(models.Model):
         return humanize_number(self.views)
 
 class VideoView(models.Model):
-    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, related_name='video')
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     viewed_at = models.DateTimeField(auto_now_add=True)
@@ -93,3 +93,14 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f"{self.subscriber.username} подписан на {self.channel.username}"
+
+class WatchLater(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meeta:
+        unique_together = ('user', 'video')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.video.title}"

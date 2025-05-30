@@ -214,6 +214,17 @@
                 </form>
             </div>
 
+            <form action="{% url 'toggle_watch_later' video.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">
+                    {% if is_saved %}
+                        ❌ Убрать из "Посмотрю позже"
+                    {% else %}
+                        ⏳ Добавить в "Посмотрю позже"
+                    {% endif %}
+                </button>
+            </form>
+
             <!-- Комментарии -->
             <div class="comments-section">
                 <h2>Комментарии</h2>
