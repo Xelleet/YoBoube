@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView, Subscription, User, WatchLater
+from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView, Subscription, User, WatchLater, \
+    SearchHistory, Category, Tag
 from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm, ReelsForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt #Для продакшена это самоубийство, по ходу времени лучше снести
@@ -14,11 +15,17 @@ from django.views.decorators.cache import never_cache
 def video_list(request):
     videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=False) #Составляем рекомендации (у нас нет алгоритмов гугла, так что выглядит колхозно
     reels = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=True)
+
+    search_history = []
+
+    if request.user.is_authenticated:
+        search_history = SearchHistory.objects.filter(user=request.user).order_by('-timestamp')[:10]
+
     try:
         profile = Profile.objects.get(user=request.user)
     except:
         profile = None #В случае, если мы ещё не зарегистрированы, или же вышли из аккаунта
-    return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile})
+    return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile, 'search_history': search_history})
 
 def reels_list(request):
     reels = Video.objects.filter(is_short=True)
@@ -231,9 +238,12 @@ def search_videos(request):
     query = request.GET.get('q')
     if query:
         videos = Video.objects.filter(title__icontains=query).annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
+
+        if request.user.is_authenticated:
+            SearchHistory.objects.create(user=request.user, query=query)
     else:
         videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
-    return render(request, 'search_result.html', {'videos': videos})
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
 
 @login_required()
 def toggle_subscription(request, user_id):
@@ -258,9 +268,12 @@ def user_profile(request, user_id):
         is_subscribed = profile.user.subscribers.filter(subscriber=request.user).exists()
     return render(request, 'user_profile.html', {'user': request.user,'profile': Profile.objects.get(user=request.user), 'user_profile': Profile.objects.get(id=user_id), 'is_subscribed': is_subscribed, 'subs': subs})
 
+@login_required()
 def find_liked_video(request):
-    likes = Like.objects.filter(user=request.user)
-    return render(request, 'liked_video_list.html', {'likes': likes})
+    videos_id = Like.objects.filter(user=request.user).values_list('video_id')
+    videos = Video.objects.filter(id__in=videos_id)
+
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
 
 @login_required
 @never_cache
@@ -297,5 +310,12 @@ def toggle_watch_later(request, video_id):
 
 @login_required()
 def watch_later_list(request):
-    videos = WatchLater.objects.filter(user=request.user).select_related('video')
-    return render(request, 'watch_later.html', {'videos': videos})
+    videos_id = WatchLater.objects.filter(user=request.user).select_related('video').values_list('video_id')
+    videos = Video.objects.filter(id__in=videos_id)
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
+
+
+def clear_search_history(request):
+    if request.user.is_authenticated:
+        SearchHistory.objects.filter(user=request.user).delete()
+    return redirect('video_list')

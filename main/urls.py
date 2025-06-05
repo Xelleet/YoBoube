@@ -25,4 +25,5 @@ urlpatterns = [
     path('user_videos/', views.user_videos, name='user_videos'),
     path('watch_later/<int:video_id>', views.toggle_watch_later, name='toggle_watch_later'),
     path('watchlater/', views.watch_later_list, name='watch_later'),
+    path('search/history/clear/', views.clear_search_history, name='clear_search_history'),
 ]

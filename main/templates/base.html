@@ -5,85 +5,178 @@
     <title>{% block title %} YuTabe {% endblock %}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-        }
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
 
-        header {
-            background-color: #202020;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+header {
+    background-color: #202020;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
 
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
+.header-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
 
-        .profile-link {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: white;
-            font-weight: bold;
-        }
+.header-left {
+    display: flex;
+    align-items: center;
+}
 
-        .profile-link img {
-            border-radius: 50%;
-            margin-right: 10px;
-        }
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
 
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+header h1 {
+    margin: 0;
+    font-size: 24px;
+    margin-right: 30px;
+}
 
-        .video-card {
-            background-color: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+.profile-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+}
 
-        .video-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
+.profile-link img {
+    border-radius: 50%;
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+}
 
-        .video-card video {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+.search-form {
+    position: relative;
+    width: 400px;
+    margin: 0 auto;
+}
 
-        .video-card h2 {
-            font-size: 16px;
-            padding: 10px 15px;
-            margin: 0;
-            color: #0f0f0f;
-        }
+.search-form input[type="text"] {
+    color: #000;
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    width: 100%;
+    font-size: 14px;
+    outline: none;
+}
 
-        .video-card a {
-            text-decoration: none;
-            color: inherit;
-        }
+#search-history {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 0 0 8px 8px;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 5px;
+}
 
-        .reel-card{
-            aspect-ratio: 9 / 16;
-            width: 100%;
-            max-height: 100vh;
-            object-fit: cover;
-        }
+#search-history ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#search-history li {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+#search-history li:hover {
+    background-color: #f1f1f1;
+    border-radius: 4px;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.video-card {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.video-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.video-card video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.video-card h2 {
+    font-size: 16px;
+    padding: 12px 15px;
+    margin: 0;
+    color: #0f0f0f;
+    line-height: 1.4;
+}
+
+.video-card a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.reel-card {
+    aspect-ratio: 9 / 16;
+    width: 100%;
+    max-height: 100vh;
+    object-fit: cover;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Добавляем медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-form {
+        width: 100%;
+        margin: 15px 0;
+    }
+
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
     </style>
 </head>
@@ -94,9 +187,29 @@
 
     <!-- Строка поиска -->
     <form method="get" action="{% url 'search_videos' %}" class="search-form">
-        <input type="text" name="q" placeholder="Поиск видео..." value="{{ request.GET.q }}">
-        <button type="submit">🔍</button>
-    </form>
+    <input type="text" name="q" placeholder="Поиск видео..." value="{{ request.GET.q }}">
+    <button type="submit">🔍</button>
+</form>
+
+<!-- Выпадающий список истории поиска -->
+<div id="search-history" class="search-history hidden">
+    {% if search_history %}
+        <ul>
+            {% for item in search_history %}
+                <li>
+                    <a href="{% url 'search_videos' %}?q={{ item.query }}">
+                        {{ item.query }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="text-right mt-2">
+            <a href="{% url 'clear_search_history' %}">Очистить историю</a>
+        </div>
+    {% else %}
+        <p class="no-results">История пуста</p>
+    {% endif %}
+</div>
 
     {% if profile %}
         {% if profile.avatar %}
@@ -117,5 +230,34 @@
     {% endblock %}
 </main>
 
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    const input = document.querySelector('.search-form input[type="text"]');
+    const historyBox = document.getElementById('search-history');
+
+    if (input && historyBox) {
+        input.addEventListener('focus', () => {
+            if (input.value.trim() !== '') {
+                historyBox.classList.remove('hidden');
+            }
+        });
+
+        input.addEventListener('input', () => {
+            if (input.value.trim() === '') {
+                historyBox.classList.add('hidden');
+            } else {
+                historyBox.classList.remove('hidden');
+            }
+        });
+
+        // Скрыть при клике вне поля поиска
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !historyBox.contains(e.target)) {
+                historyBox.classList.add('hidden');
+            }
+        });
+    }
+</script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 def humanize_number(value):
@@ -15,6 +16,20 @@ def humanize_number(value):
     else:
         return str(value)
 
+
+class Category(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
 class Video(models.Model):
     title = models.CharField(max_length=255)
     video_file = models.FileField(upload_to='videos/', verbose_name='Video file')
@@ -23,6 +38,14 @@ class Video(models.Model):
     views = models.PositiveIntegerField(default=0)
     is_short = models.BooleanField(default=False)
     uploader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_videos', null=True, blank=True)
+    uploaded_at = models.DateTimeField(default=timezone.now)
+    preview = models.ImageField(upload_to='previews/', null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    tags = models.ManyToManyField(Tag, blank=True)
+
+    def get_uploaded_at(self):
+        from django.utils.timesince import timesince
+        return f"{timesince(self.uploaded_at)} назад"
 
     def __str__(self):
         return self.title
@@ -104,3 +127,11 @@ class WatchLater(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.video.title}"
+
+class SearchHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    query = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.query}"

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Video, Reels
+from .models import Video, Reels, Category
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -7,10 +7,19 @@ from .models import Profile, Comment
 
 class VideoForm(forms.ModelForm):
     video_file = forms.FileField()
+    tags = forms.CharField(
+        required=False,
+        help_text="Enter tags",
+        widget=forms.TextInput(attrs={'placeholder': 'Tag1, Tag2, Tag3'})
+    )
 
     class Meta:
         model = Video
-        fields = ['title', 'video_file']
+        fields = ['title', 'video_file', 'preview', 'category']
+
+    def __int__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects
 
 class ReelsForm(forms.ModelForm):
     class Meta:

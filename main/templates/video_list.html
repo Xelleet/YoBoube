@@ -1,81 +1,116 @@
-{% extends 'base.html'  %}
+{% extends 'base.html' %}
 {% block title %} YuTabe {% endblock %}
 {% block content %}
 
-<style>
-    .reels-section {
-        grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 15px;
-        margin: 20px 0;
-        border-top: 1px solid #eee;
-        border-bottom: 1px solid #eee;
-        padding: 20px 0;
-    }
+<!-- Контейнер страницы -->
+<div class="flex h-screen">
 
-    .reel-card {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        aspect-ratio: 9/16;
-        background: #000;
-    }
+  <!-- Боковое меню -->
+  <aside id="sidebar" class="bg-gray-900 text-white w-64 h-full flex flex-col shadow-md transition-all duration-300 ease-in-out">
+    <div class="p-4 text-xl font-bold border-b border-gray-700">Меню</div>
+    <nav class="flex-1 p-2 space-y-2">
+      <a href="{% url 'video_list' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Главная</a>
+      <a href="{% url 'find_liked_video' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Понравившиеся</a>
+      <a href="{% url 'viewing_history' %}" class="block px-4 py-2 rounded hover:bg-gray-800">История</a>
+      <a href="{% url 'watch_later' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Смотреть позже</a>
+    </nav>
+    <button id="toggleBtn"
+      class="absolute top-1/2 transform -translate-y-1/2 translate-x-1/2 bg-gray-800 hover:bg-gray-700 text-sm rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 transition-transform duration-300 hover:scale-110">
+      ↔
+    </button>
+  </aside>
 
-    .reel-video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .reel-overlay {
-        position: absolute;
-        bottom: 10px;
-        left: 10px;
-    }
-
-    .reel-badge {
-        background: #f00;
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-</style>
-
-<main>
-    <div class="video-grid">
-        {% for video in videos %}
-            <a href="{% url 'video_detail' video.pk %}">
-                <div class="video-card">
-                    <video controls>
-                        <source src="{{ video.video_file.url }}" type="video/mp4">
-                        Ваш браузер не поддерживает тег video.
-                    </video>
-                    <h2>{{ video.title }}</h2>
-                </div>
-            </a>
-        {% if forloop.counter == 2 %}
-            <div class="reels-section">
-                {% for reel in reels %}
-                    <a href="{% url 'reel' reel.pk %}" class="reel-link">
-                        <div class="reel-card">
-                            <div class="reel-player">
-                                <video controls class="reel-video">
-                                    <source src="{{ reel.video_file.url }}" type="video/mp4">
-                                </video>
-                                <div class="reel-overlay">
-                                    <span class="reel-badge">Reel</span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                {% endfor %}
-            </div>
-        {% endif %}
+  <!-- Основной контент -->
+  <main class="bg-gradient-to-b from-gray-900 to-black text-white flex-1 overflow-auto">
+    <p><strong>Категория: </strong>{{video.category}}</p>
+    <p><strong>Теги: </strong>
+        {% for tag in video.tags.all %}
+          <a href="{% url 'videos_by_tag' tag.slug %}">#{{tag.name}}</a>
+        {% empty %}
+          Нет тегов
         {% endfor %}
+    </p>
+    <div class="container mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 video-grid">
+        {% for video in videos %}
+          <a href="{% url 'video_detail' video.pk %}" class="block group">
+            <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl video-card border border-gray-700">
+            <div class="aspect-video w-full overflow-hidden">
+              {% if video.preview %}
+                <img
+                  src="{{ video.preview.url }}"
+                  alt="{{ video.title }}"
+                  class="w-full h-full object-cover">
+              {% else %}
+                <img
+                  src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"
+                  alt="Default preview"
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                >
+              {% endif %}
+            </div>
+              <div class="p-4">
+                <h2 class="text-white text-xl font-bold group-hover:text-pink-500 transition">{{ video.title }}</h2>
+                {% if video.uploader.profile.avatar %}
+                  <img src="{{ video.uploader.profile.avatar.url }}" class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm hover:shadow-md transition-shadow">
+                {% endif %}
+                <h3 class="text-indigo-300 text-sm mt-1">{{ video.uploader }}</h3>
+                <div class="text-gray-400 text-xs mt-2 video-meta">
+                  {{ video.get_views }} просмотров • {{ video.get_uploaded_at }}
+                </div>
+              </div>
+            </div>
+          </a>
+
+          {# Вставка ленты Reels каждые 5 видео #}
+          {% if forloop.counter|divisibleby:"5" %}
+            <div class="reels-section col-span-full my-10">
+              <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 mb-4">Популярные Reels</h2>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {% for reel in reels|slice:":5" %}
+                  <a href="{% url 'reel' reel.pk %}" class="reel-link block group">
+                    <div class="reel-card relative rounded-lg overflow-hidden shadow-md group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-105">
+                      <div class="reel-player aspect-video bg-black relative">
+                        <video controls class="reel-video w-full h-full object-cover">
+                          <source src="{{ reel.video_file.url }}" type="video/mp4">
+                        </video>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 flex items-end justify-center pb-3 transition-opacity">
+                          <span class="reel-badge text-white bg-pink-600 text-xs font-bold px-2 py-1 rounded-full shadow-lg">Reel</span>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
     </div>
-</main>
+  </main>
+
+</div>
+
+<!-- JavaScript для переключения -->
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleBtn');
+
+  let isCollapsed = false;
+
+  toggleBtn.addEventListener('click', () => {
+    if (!isCollapsed) {
+      // Сворачиваем
+      sidebar.classList.add('w-0');
+      sidebar.classList.remove('w-64');
+    } else {
+      // Разворачиваем
+      sidebar.classList.add('w-64');
+      sidebar.classList.remove('w-0');
+    }
+    isCollapsed = !isCollapsed;
+  });
+</script>
 
 {% endblock %}

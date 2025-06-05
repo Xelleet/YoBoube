@@ -1,18 +1,31 @@
 {% extends 'base.html' %}
 {% block title %} YuTabe {% endblock %}
 {% block content %}
+<!-- Todo - Затычку на стили заменить на нормальные стили -->
     <H1>Your history</H1>
     <div>
        {% if history %}
       <ul>
         {% for video in history %}
         <li>
-          <a href="{% url 'video_detail' video.pk %}">
-            <video controls>
-              <source src="{{ video.video_file.url }}" type="video/mp4">
-            </video>
+            <div class="w-64 h-20">
+          <a href="{% url 'video_detail' video.video.pk %}">
+            {% if video.video.preview %}
+                <img
+                  src="{{ video.video.preview.url }}"
+                  alt="{{ video.video.title }}"
+                  class="w-full h-full object-cover">
+              {% else %}
+                <img
+                  src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"
+                  alt="Default preview"
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                >
+              {% endif %}
           </a>
-            <p>Просмотренo: {{ video.viewed_at|date:"d.m.Y H:i"}}</p>
+            </div>
+                        <p>Просмотренo: {{ video.viewed_at|date:"d.m.Y H:i"}}</p>
         </li>
         {% endfor %}
       </ul>
