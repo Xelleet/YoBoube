@@ -25,7 +25,7 @@ def video_list(request):
         profile = Profile.objects.get(user=request.user)
     except:
         profile = None #В случае, если мы ещё не зарегистрированы, или же вышли из аккаунта
-    return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile, 'search_history': search_history})
+    return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile, 'search_history': search_history, 'categories': Category.objects.all()})
 
 def reels_list(request):
     reels = Video.objects.filter(is_short=True)
@@ -81,7 +81,7 @@ def upload_video(request):
     else:
         form = VideoForm()
 
-    return render(request, 'upload_video.html', {'form': form})
+    return render(request, 'upload_video.html', {'form': form, 'profile': Profile.objects.get(user=request.user)})
 
 
 #Профиль
@@ -224,7 +224,7 @@ def video_detail(request, pk):
             return redirect('login')
     else:
         form = CommentForm()
-    return render(request, 'video_detail.html', {'video': video, 'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed, 'is_saved': is_saved})
+    return render(request, 'video_detail.html', {'video': video, 'profile': Profile.objects.get(user=request.user) ,'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed, 'is_saved': is_saved})
 
 def reel(request, pk):
     return pk #ToDO сделать логику рилсов
@@ -293,7 +293,7 @@ def viewing_history(request):
 @login_required()
 def user_videos(request):
     videos = Video.objects.filter(uploader=request.user)
-    return render(request, 'user_videos.html', {'videos': videos})
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
 
 @login_required()
 def toggle_watch_later(request, video_id):
@@ -319,3 +319,7 @@ def clear_search_history(request):
     if request.user.is_authenticated:
         SearchHistory.objects.filter(user=request.user).delete()
     return redirect('video_list')
+
+def search_by_category(request, id):
+    videos = Video.objects.filter(category = Category.objects.get(id=id))
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})

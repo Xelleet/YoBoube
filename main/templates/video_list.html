@@ -13,23 +13,21 @@
       <a href="{% url 'find_liked_video' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Понравившиеся</a>
       <a href="{% url 'viewing_history' %}" class="block px-4 py-2 rounded hover:bg-gray-800">История</a>
       <a href="{% url 'watch_later' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Смотреть позже</a>
+      <a href="{% url 'user_videos' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Ваши видео</a>
     </nav>
     <button id="toggleBtn"
-      class="absolute top-1/2 transform -translate-y-1/2 translate-x-1/2 bg-gray-800 hover:bg-gray-700 text-sm rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 transition-transform duration-300 hover:scale-110">
+      class="absolute top-1/2 transform -translate-y-1/5 translate-x-1/2 bg-gray-800 hover:bg-gray-700 text-sm rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 transition-transform duration-300 hover:scale-110">
       ↔
     </button>
   </aside>
 
   <!-- Основной контент -->
   <main class="bg-gradient-to-b from-gray-900 to-black text-white flex-1 overflow-auto">
-    <p><strong>Категория: </strong>{{video.category}}</p>
-    <p><strong>Теги: </strong>
-        {% for tag in video.tags.all %}
-          <a href="{% url 'videos_by_tag' tag.slug %}">#{{tag.name}}</a>
-        {% empty %}
-          Нет тегов
-        {% endfor %}
-    </p>
+    {% for category in categories %}
+  <div class="inline-block px-3 py-1 mr-2 mb-2 text-sm font-medium bg-gray-100 rounded-full text-gray-800 hover:bg-gray-200 transition-colors">
+    <p><a href="{% url 'search_by_category' category.id %}">{{ category.name }}</a></p>
+  </div>
+{% endfor %}
     <div class="container mx-auto px-4 py-8">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 video-grid">
         {% for video in videos %}
