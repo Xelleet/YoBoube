@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Уведомления</h2>
+{% if notifications %}
+    <ul>
+        {% for notification in notifications %}
+            <li class="notification {% if not notifications.is_read% }unread{% endif %">
+                <p>{{notification.message}}</p>
+                <small>{{ notification.created_at|timesince}} назад</small>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'mark_all_as_read' %}">Прочитать всё</a>
+{% else %}
+    <p>Нет новых умедомлений</p>
+{% endif %}
+{% endblock %}

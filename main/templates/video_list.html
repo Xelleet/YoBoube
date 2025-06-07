@@ -61,8 +61,8 @@
             </div>
           </a>
 
-          {# Вставка ленты Reels каждые 5 видео #}
-          {% if forloop.counter|divisibleby:"5" %}
+          {# Вставка ленты Reels каждые 6 видео #}
+          {% if forloop.counter|divisibleby:"6" %}
             <div class="reels-section col-span-full my-10">
               <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 mb-4">Популярные Reels</h2>
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

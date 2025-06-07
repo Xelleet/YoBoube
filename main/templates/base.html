@@ -210,8 +210,16 @@ header h1 {
         <p class="no-results">История пуста</p>
     {% endif %}
 </div>
-
     {% if profile %}
+        <a href="{% url 'notifications' %}">
+                <p>✨
+                    {% if unread_count %}
+                        {% if unread_count != 0 %}
+                        {{unread_count}}
+                    {% endif %}
+                </p>
+            {%endif%}
+        </a>
         {% if profile.avatar %}
             <a href="{% url 'user_profile' profile.id %}" class="profile-link">
                 <img src="{{ profile.avatar.url }}" alt="Аватар" width="40">

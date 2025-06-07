@@ -42,6 +42,7 @@ class Video(models.Model):
     preview = models.ImageField(upload_to='previews/', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     tags = models.ManyToManyField(Tag, blank=True)
+    deleted = models.BooleanField(default=False)
 
     def get_uploaded_at(self):
         from django.utils.timesince import timesince
@@ -135,3 +136,20 @@ class SearchHistory(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.query}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class Report(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, null=True, blank=True)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True)
+    reason = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        target = self.video if self.video else self.comment
+        return f"Жалоба от {self.user.username} на {target}"

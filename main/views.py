@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView, Subscription, User, WatchLater, \
-    SearchHistory, Category, Tag
-from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm, ReelsForm
+    SearchHistory, Category, Tag, Notification
+from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm, ReelsForm, ReportForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt #Для продакшена это самоубийство, по ходу времени лучше снести
 from django.db.models import F, Value, IntegerField
@@ -13,19 +13,22 @@ from django.views.decorators.cache import never_cache
 
 #Наши видео и прости господи шортсы
 def video_list(request):
-    videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=False) #Составляем рекомендации (у нас нет алгоритмов гугла, так что выглядит колхозно
-    reels = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=True)
+    videos = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=False, deleted=False) #Составляем рекомендации (у нас нет алгоритмов гугла, так что выглядит колхозно
+    reels = Video.objects.annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating').filter(is_short=True, deleted=False)
 
     search_history = []
 
     if request.user.is_authenticated:
         search_history = SearchHistory.objects.filter(user=request.user).order_by('-timestamp')[:10]
+        unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    else:
+        unread_count = None
 
     try:
         profile = Profile.objects.get(user=request.user)
     except:
         profile = None #В случае, если мы ещё не зарегистрированы, или же вышли из аккаунта
-    return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile, 'search_history': search_history, 'categories': Category.objects.all()})
+    return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile, 'search_history': search_history, 'categories': Category.objects.all(), 'unread_count': unread_count})
 
 def reels_list(request):
     reels = Video.objects.filter(is_short=True)
@@ -77,6 +80,13 @@ def upload_video(request):
 
             form.instance.uploader = request.user
             form.save()
+            #Уведомления
+            subs = Subscription.objects.filter(channel=request.user).select_related('subscriber')
+            for sub in subs:
+                Notification.objects.create(
+                    user=sub.subscriber,
+                    message=f"{request.user.username} только что загрузил(а) новое видео: {form.instance.title}"
+                )
             return redirect('video_list')
     else:
         form = VideoForm()
@@ -174,65 +184,64 @@ def toggle_comment_like(request, pk, id):
 
 #Страница самого видео со всей информацией
 def video_detail(request, pk):
-    video = get_object_or_404(Video, pk=pk)
-    session_key = request.session.session_key or request.COOKIES.get('sessionid')
-    if session_key and not VideoView.objects.filter(video=video, session_key=session_key).exists():
-        #Добавляем просмотры к видео, если у нас "уникальный" пользователь (чтобы как в VK видео не было)
-        VideoView.objects.create(video=video, session_key=session_key, user=request.user)
-        video.views += 1
-        video.save(update_fields=['views'])
-    comments = video.comments.all()
-
-    is_saved = WatchLater.objects.filter(user=request.user, video=video).exists()
-
-    WEIGHT_VIEWS = 0.01 #Цена или вес просмотра (чтобы новички на платформе имели шансы попасть в рекомендации например)
-
-    suggested_videos = Video.objects.exclude(pk=pk).annotate(
-        rating=ExpressionWrapper(
-            F('likes_count') - F('dislikes_count') + WEIGHT_VIEWS * F('views'),
-            output_field=FloatField()
-        )
-    ).order_by('-rating').filter(is_short=False)[:10]
-    #Проверяем, поставили ли мы уже реакцию на видео
     try:
-        like = Like.objects.get(user_id=request.user.id, video_id=pk)
-        if like.reaction_type == 'like':#Как бы дебильно это не выглядело
-            is_liked = True
-            is_disliked = False
-        else:
-            is_disliked = True
+        video = get_object_or_404(Video, pk=pk, deleted=False)
+        session_key = request.session.session_key or request.COOKIES.get('sessionid')
+        if session_key and not VideoView.objects.filter(video=video, session_key=session_key).exists():
+            #Добавляем просмотры к видео, если у нас "уникальный" пользователь (чтобы как в VK видео не было)
+            VideoView.objects.create(video=video, session_key=session_key, user=request.user)
+            video.views += 1
+            video.save(update_fields=['views'])
+        comments = video.comments.all()
+
+        is_saved = WatchLater.objects.filter(user=request.user, video=video).exists()
+
+        WEIGHT_VIEWS = 0.01 #Цена или вес просмотра (чтобы новички на платформе имели шансы попасть в рекомендации например)
+
+        suggested_videos = Video.objects.exclude(pk=pk).annotate(
+            rating=ExpressionWrapper(
+                F('likes_count') - F('dislikes_count') + WEIGHT_VIEWS * F('views'),
+                output_field=FloatField()
+            )
+        ).order_by('-rating').filter(is_short=False)[:10]
+        #Проверяем, поставили ли мы уже реакцию на видео
+        try:
+            like = Like.objects.get(user_id=request.user.id, video_id=pk)
+            if like.reaction_type == 'like':#Как бы дебильно это не выглядело
+                is_liked = True
+                is_disliked = False
+            else:
+                is_disliked = True
+                is_liked = False
+        except:
             is_liked = False
-    except:
-        is_liked = False
-        is_disliked = False
+            is_disliked = False
 
-    is_subscribed = False
-    if request.user.is_authenticated and request.user != video.uploader:
-        is_subscribed = video.uploader.subscribers.filter(subscriber=request.user).exists()
+        is_subscribed = False
+        if request.user.is_authenticated and request.user != video.uploader:
+            is_subscribed = video.uploader.subscribers.filter(subscriber=request.user).exists()
 
-    #Если мы хотим оставить свой чудесный комментарий
-    if request.method == 'POST':
-        if request.user.is_authenticated:
-            form = CommentForm(request.POST)
-            if form.is_valid():
-                comment = form.save(commit=False)
-                comment.video = video
-                comment.user = request.user
-                comment.save()
-                return redirect('video_detail', pk=pk)
+        #Если мы хотим оставить свой чудесный комментарий
+        if request.method == 'POST':
+            if request.user.is_authenticated:
+                form = CommentForm(request.POST)
+                if form.is_valid():
+                    comment = form.save(commit=False)
+                    comment.video = video
+                    comment.user = request.user
+                    comment.save()
+                    return redirect('video_detail', pk=pk)
+            else:
+                return redirect('login')
         else:
-            return redirect('login')
-    else:
-        form = CommentForm()
-    return render(request, 'video_detail.html', {'video': video, 'profile': Profile.objects.get(user=request.user) ,'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed, 'is_saved': is_saved})
+            form = CommentForm()
+        return render(request, 'video_detail.html', {'video': video, 'profile': Profile.objects.get(user=request.user) ,'comments': comments, 'form': form, 'is_liked': is_liked, 'is_disliked': is_disliked, 'suggested_videos': suggested_videos, 'is_subscribed': is_subscribed, 'is_saved': is_saved})
+    except Exception as e:
+        print(e)
+        return redirect('video_list')
 
 def reel(request, pk):
     return pk #ToDO сделать логику рилсов
-
-def delete_video(request, pk):
-    video = get_object_or_404(Video, id=pk)
-    video.delete() #ToDO: Я так прикинул, нам надо ещё и с сервера файл видео сносить
-    return redirect('video_list')
 
 def search_videos(request):
     query = request.GET.get('q')
@@ -323,3 +332,51 @@ def clear_search_history(request):
 def search_by_category(request, id):
     videos = Video.objects.filter(category = Category.objects.get(id=id))
     return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
+
+@login_required()
+def notifications(request):
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at').update(is_read=True)
+    return render(request, 'notifications.html', {'notifications': notifications_list})
+
+@login_required()
+def mark_all_as_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return redirect('notifications')
+
+@login_required()
+def report_video(request, video_id):
+    video = get_object_or_404(Video, id=video_id)
+    if request.method == 'POST':
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.user = request.user
+            report.video = video
+            report.save()
+            return redirect('video_detail', pk=video.id)
+    else:
+        form = ReportForm()
+    return render(request, 'report_form.html', {'form': form, 'target': video})
+
+@login_required()
+def report_comment(request, video_id, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    if request.method == 'POST':
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.user = request.user
+            report.comment = comment
+            report.save()
+            return redirect('video_detail', pk=video_id)
+    else:
+        form = ReportForm()
+    return render(request, 'report_form.html', {'form': form, 'target': comment})
+
+def hide_video(video):
+    video.deleted = True
+    video.save()
+
+def delete_video(video):
+    video_name = video.video_file.name
+    os.remove(f"media/{video_name}")

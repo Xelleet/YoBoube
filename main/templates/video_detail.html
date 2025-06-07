@@ -76,6 +76,8 @@
       </button>
     </form>
 
+    <a href="{% url 'report_video' video.id %}">Пожаловаться на это видео</a>
+
     <!-- Комментарии -->
     <div class="comments-section mt-8">
       <h2 class="text-xl font-semibold text-white mb-4">Комментарии</h2>
@@ -92,6 +94,7 @@
               <strong class="text-blue-400">{{ comment.user.username }}</strong>
               <small class="text-gray-500 ml-2">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
               <p class="mt-1 text-white">{{ comment.text }}</p>
+              <small><a href="{% url 'report_comment' video.id comment.id %}" class="text-gray-500">Пожаловаться</a></small>
 
               <form method="post" action="{% url 'comment_toggle_like' video.pk comment.id %}" class="mt-2">
                 {% csrf_token %}

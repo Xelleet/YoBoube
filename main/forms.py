@@ -1,5 +1,5 @@
 from django import forms
-from .models import Video, Reels, Category
+from .models import Video, Reels, Category, Report
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -45,3 +45,8 @@ class CommentForm(forms.ModelForm):
 
 class SubscribeForm(forms.Form):
     channel_id = forms.IntegerField(widget=forms.HiddenInput())
+
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ['reason']

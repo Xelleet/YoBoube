@@ -26,5 +26,9 @@ urlpatterns = [
     path('watch_later/<int:video_id>', views.toggle_watch_later, name='toggle_watch_later'),
     path('watchlater/', views.watch_later_list, name='watch_later'),
     path('search/history/clear/', views.clear_search_history, name='clear_search_history'),
-    path('search_by_category/<int:id>', views.search_by_category, name='search_by_category')
+    path('search_by_category/<int:id>', views.search_by_category, name='search_by_category'),
+    path('notifications/', views.notifications, name='notifications'),
+    path('notifications/mark-read/', views.mark_all_as_read, name='mark_all_as_read'),
+    path('report_video/<int:video_id>', views.report_video, name='report_video'),
+    path('report_comment/<int:video_id>/<int:comment_id>', views.report_comment, name='report_comment')
 ]
