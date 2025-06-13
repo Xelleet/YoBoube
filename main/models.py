@@ -150,6 +150,36 @@ class Report(models.Model):
     reason = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    STATUS_CHOICES = (
+        ('pending', 'В обработке'),
+        ('processed', 'Обработано'),
+    )
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
     def __str__(self):
         target = self.video if self.video else self.comment
-        return f"Жалоба от {self.user.username} на {target}"
+        return f"Жалоба от {self.user.username} на {target} ({self.get_status_display()})"
+
+    def get_status_display(self):
+        return self.status
+
+class PlayList(models.Model):
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    videos = models.ManyToManyField(Video, through='PlaylistItem')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class PlaylistItem(models.Model):
+    playlist = models.ForeignKey(PlayList, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.playlist.name}: {self.video.title}"

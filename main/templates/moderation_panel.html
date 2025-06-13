@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% for report in reports %}
+    <div>
+        {{ report}}
+        {% if report.status == 'pending' %}
+            <span style="color: orange;">{{ report.get_status_display}}</span>
+        {% else %}
+            <span style="color: green;">{{ report.get_status_display}}</span>
+        {% endif %}
+                <form method="POST" action="{% url 'mark_report_as_processed' report.id %}">
+            {% csrf_token %}
+            <button type="submit">Пометить как обработанное</button>
+        </form>
+    </div>
+    {% endfor %}
+{% endblock %}

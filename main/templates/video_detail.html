@@ -75,6 +75,13 @@
         {% endif %}
       </button>
     </form>
+    <form action="{% url 'add_to_playlist' video.id %}" class="mb-6">
+      {% csrf_token %}
+      <button type="submit"
+              class="px-4 py-2 rounded-full bg-purple-700 hover:bg-purple-800 text-white transition">
+          Добавить в плейлист
+      </button>
+    </form>
 
     <a href="{% url 'report_video' video.id %}">Пожаловаться на это видео</a>
 

@@ -14,6 +14,7 @@
       <a href="{% url 'viewing_history' %}" class="block px-4 py-2 rounded hover:bg-gray-800">История</a>
       <a href="{% url 'watch_later' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Смотреть позже</a>
       <a href="{% url 'user_videos' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Ваши видео</a>
+      <a href="{% url 'user_playlists' profile.user.id%}" class="block px-4 py-2 rounded hover:bg-gray-800">Ваши плейлисты</a>
     </nav>
     <button id="toggleBtn"
       class="absolute top-1/2 transform -translate-y-1/5 translate-x-1/2 bg-gray-800 hover:bg-gray-700 text-sm rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 transition-transform duration-300 hover:scale-110">
@@ -34,11 +35,19 @@
           <a href="{% url 'video_detail' video.pk %}" class="block group">
             <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl video-card border border-gray-700">
             <div class="aspect-video w-full overflow-hidden">
+              {% if video.deleted %}
+              <img
+                  src="https://avatars.mds.yandex.net/i?id=27e7981b69dd1b13655dbddc67c125e9309813b3-9067403-images-thumbs&n=13"
+                  alt="{{ video.title }}"
+                  class="w-full h-full object-cover"
+              >
+              {% endif %}
               {% if video.preview %}
-                <img
+              <img
                   src="{{ video.preview.url }}"
                   alt="{{ video.title }}"
-                  class="w-full h-full object-cover">
+                  class="w-full h-full object-cover"
+              >
               {% else %}
                 <img
                   src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"

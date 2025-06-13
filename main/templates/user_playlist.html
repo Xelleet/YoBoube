@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold text-white mb-6">Мои плейлисты</h2>
+
+    <!-- Кнопка создания нового плейлиста -->
+    {% if is_user_playlist %}
+      <a href="{% url 'create_playlist' %}"
+         class="inline-block mb-6 px-5 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg shadow transition duration-300">
+        Создать новый плейлист
+      </a>
+    {% endif %}
+
+    <!-- Список плейлистов -->
+    <ul class="space-y-4">
+      {% for playlist in playlists %}
+        <li>
+          <a href="{% url 'view_playlist' playlist.id %}"
+             class="block p-4 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-md transition duration-300 text-lg text-white font-medium">
+            {{ playlist.name }}
+          </a>
+        </li>
+      {% empty %}
+        <p class="text-gray-400 italic">У вас нет плейлистов</p>
+      {% endfor %}
+    </ul>
+
+    <!-- Ссылка на главную -->
+    <div class="mt-8">
+      <a href="{% url 'video_list' %}"
+         class="text-sm text-blue-400 hover:text-blue-300 underline transition duration-300">
+        &larr; На главную
+      </a>
+    </div>
+  </div>
+{% endblock %}

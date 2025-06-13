@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Заголовок плейлиста -->
+    <h2 class="text-3xl font-bold text-white mb-6">{{ playlist.name }}</h2>
+
+    <!-- Список видео в плейлисте -->
+    <ul class="space-y-3">
+      {% for item in items %}
+        <li>
+          <a href="{% url 'video_detail' item.video.id %}"
+             class="block p-4 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-sm transition duration-300 text-white text-lg">
+            {{ item.video.title }}
+          </a>
+        </li>
+      {% empty %}
+        <p class="text-gray-400 italic">Плейлист пуст</p>
+      {% endfor %}
+    </ul>
+
+    <!-- Ссылка назад -->
+    <div class="mt-8">
+      <a href="{% url 'user_playlists' profile.user.id %}"
+         class="inline-block text-sm text-blue-400 hover:text-blue-300 underline transition duration-300">
+        &larr; К списку плейлистов
+      </a>
+    </div>
+  </div>
+{% endblock %}

@@ -30,5 +30,12 @@ urlpatterns = [
     path('notifications/', views.notifications, name='notifications'),
     path('notifications/mark-read/', views.mark_all_as_read, name='mark_all_as_read'),
     path('report_video/<int:video_id>', views.report_video, name='report_video'),
-    path('report_comment/<int:video_id>/<int:comment_id>', views.report_comment, name='report_comment')
+    path('report_comment/<int:video_id>/<int:comment_id>', views.report_comment, name='report_comment'),
+    path('my_reports/', views.my_reports, name='my_reports'),
+    path('moderation/', views.moderation_panel, name='moderation_panel'),
+    path('moderation/process/<int:report_id>', views.mark_report_as_processed, name='mark_report_as_processed'),
+    path('playlists/create/', views.create_playlist, name='create_playlist'),
+    path('playlists/<int:playlist_id>', views.view_playlist, name='view_playlist'),
+    path('playlists/add/<int:video_id>/', views.add_to_playlist, name='add_to_playlist'),
+    path('user_playlists/<int:user_id>', views.user_playlists, name='user_playlists')
 ]

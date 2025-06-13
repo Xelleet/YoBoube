@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Добавить видео в плейлист{% endblock %}
+{% block content %}
+  <div class="max-w-2xl mx-auto px-4 py-10">
+    <!-- Заголовок -->
+    <h2 class="text-2xl font-bold text-white mb-6">Добавить видео "{{ video.title }}" в плейлист</h2>
+
+    <!-- Форма -->
+    <form action="{% url 'add_to_playlist' video.id %}" method="post" class="space-y-6 bg-gray-800 p-6 rounded-xl shadow-md">
+      {% csrf_token %}
+
+      <!-- Выбор плейлиста -->
+      <div>
+        <label for="playlist_name" class="block text-sm font-medium text-gray-300 mb-2">
+          Выберите плейлист:
+        </label>
+        <select name="playlist_name" id="playlist_name"
+                class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500">
+          {% for playlist in playlists %}
+            <option value="{{ playlist.name }}">{{ playlist.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Кнопка отправки -->
+      <div>
+        <button type="submit"
+                class="px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg shadow transition duration-300 focus:outline-none focus:ring-2 focus:ring-pink-500">
+          Добавить
+        </button>
+      </div>
+    </form>
+
+    <!-- Ссылка назад -->
+    <div class="mt-6">
+      <a href="{% url 'video_detail' video.id %}"
+         class="text-sm text-blue-400 hover:text-blue-300 underline transition duration-300">
+        &larr; Назад к видео
+      </a>
+    </div>
+  </div>
+{% endblock %}

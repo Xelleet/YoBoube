@@ -1,5 +1,5 @@
 from django import forms
-from .models import Video, Reels, Category, Report
+from .models import Video, Reels, Category, Report, PlayList
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -50,3 +50,8 @@ class ReportForm(forms.ModelForm):
     class Meta:
         model = Report
         fields = ['reason']
+
+class PlaylistForm(forms.ModelForm):
+    class Meta:
+        model = PlayList
+        fields = ['name']

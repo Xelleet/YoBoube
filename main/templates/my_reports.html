@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Мои жалобы</h2>
+    <ul>
+        {% for report in reports %}
+            <li>
+                {{ report.reason}}
+                <strong>Статус: </strong>
+                {% if repost.status == 'pending' %}
+                    <span style="color: orange;">{{ report.get_status_display}}</span>
+                {% else %}
+                    <span style="color: green;">{{ report.get_status_display}}</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

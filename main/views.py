@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Video, Profile, Like, Comment, CommentLike, Reels, VideoView, Subscription, User, WatchLater, \
-    SearchHistory, Category, Tag, Notification
-from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm, ReelsForm, ReportForm
+    SearchHistory, Category, Tag, Notification, Report, PlaylistItem, PlayList
+from .forms import VideoForm, RegisterForm, ProfileForm, CommentForm, ReelsForm, ReportForm, PlaylistForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt #Для продакшена это самоубийство, по ходу времени лучше снести
 from django.db.models import F, Value, IntegerField
@@ -330,7 +330,7 @@ def clear_search_history(request):
     return redirect('video_list')
 
 def search_by_category(request, id):
-    videos = Video.objects.filter(category = Category.objects.get(id=id))
+    videos = Video.objects.filter(category = Category.objects.get(id=id), deleted=False)
     return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
 
 @login_required()
@@ -372,6 +372,97 @@ def report_comment(request, video_id, comment_id):
     else:
         form = ReportForm()
     return render(request, 'report_form.html', {'form': form, 'target': comment})
+
+
+@login_required
+def mark_report_as_processed(request, report_id):
+    print(f"Received report_id: {report_id}")  # Отладочный принт
+    if not request.user.is_staff:
+        return redirect('video_list')  # Только модераторы могут зайти
+
+    if request.method != 'POST':
+        return redirect('moderation_panel')  # Перенаправляем на главную страницу модерации, если это не POST-запрос
+
+    try:
+        report = Report.objects.get(id=report_id)
+    except Report.DoesNotExist:
+        return redirect('moderation_panel')  # Если жалобы с таким ID нет, перенаправляем обратно
+
+    report.status = 'processed'
+    report.save()
+
+    # Опционально: скрыть видео, если оно было в жалобе
+    if report.video:
+        report.video.deleted = True
+        report.video.save()
+
+    return redirect('moderation_panel')
+
+@login_required()
+def moderation_panel(request):
+    if not request.user.is_staff:
+        return redirect('video_list')
+
+    reports = Report.objects.filter(status='pending')
+    return render(request, 'moderation_panel.html', {'reports': reports})
+
+@login_required()
+def my_reports(request):
+    reports = Report.objects.filter(user=request.user)
+    return render(request, 'my_reports.html', {'reports': reports})
+
+@login_required()
+def create_playlist(request):
+    if request.method == 'POST':
+        form = PlaylistForm(request.POST)
+        if form.is_valid():
+            playlist = form.save(commit=False)
+            playlist.user = request.user
+            if PlayList.objects.filter(name=playlist.name):
+                return redirect('user_playlists', request.user.id)
+            playlist.save()
+            return redirect('user_playlists')
+    else:
+        form = PlaylistForm()
+    return render(request, 'create_playlist.html', {'form': form, 'profile': Profile.objects.get(user=request.user)})
+
+
+@login_required
+def add_to_playlist(request, video_id):
+    video = get_object_or_404(Video, id=video_id)
+
+    if request.method == 'POST':
+        playlist_name = request.POST.get('playlist_name')
+        try:
+            playlist = PlayList.objects.get(name=playlist_name, user=request.user)
+            PlaylistItem.objects.get_or_create(playlist=playlist, video=video)
+            return redirect('video_detail', video_id)
+        except PlayList.DoesNotExist:
+            # Если плейлист не существует, можно показать ошибку или перенаправить обратно
+            return redirect('user_playlists')
+
+    # Если это GET-запрос, отобразим форму выбора плейлиста
+    playlists = PlayList.objects.filter(user=request.user)
+    return render(request, 'add_to_playlist.html', {
+        'video': video,
+        'playlists': playlists,
+        'profile': Profile.objects.get(user=request.user)
+    })
+
+@login_required()
+def view_playlist(request, playlist_id):
+    playlist = get_object_or_404(PlayList, id=playlist_id, user=request.user)
+    items = playlist.playlistitem_set.select_related('video').all()
+    return render(request, 'view_playlist.html', {
+        'playlist': playlist,
+        'items': items,
+        'profile': Profile.objects.get(user=request.user)
+    })
+
+@login_required()
+def user_playlists(request, user_id):
+    playlists = PlayList.objects.filter(user=User.objects.get(id=user_id))
+    return render(request, 'user_playlist.html', {'playlists': playlists, 'profile': Profile.objects.get(user=request.user), 'is_user_playlist': request.user == User.objects.get(id=user_id)})
 
 def hide_video(video):
     video.deleted = True
