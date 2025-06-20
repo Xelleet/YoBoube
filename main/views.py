@@ -421,7 +421,7 @@ def create_playlist(request):
             if PlayList.objects.filter(name=playlist.name):
                 return redirect('user_playlists', request.user.id)
             playlist.save()
-            return redirect('user_playlists')
+            return redirect('user_playlists', playlist.id)
     else:
         form = PlaylistForm()
     return render(request, 'create_playlist.html', {'form': form, 'profile': Profile.objects.get(user=request.user)})
