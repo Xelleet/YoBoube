@@ -10,7 +10,10 @@
                         Ваш браузер не поддерживает тег video.
                     </video>
                     <h2>{{ reel.title }}</h2>
+                    <p>Автор: {{reel.uploader.username}}</p>
                 </div>
+        {% empty %}
+                <p>Нет доступных рилсов</p>
         {% endfor %}
     </div>
     </main>

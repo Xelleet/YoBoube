@@ -1,36 +1,78 @@
 {% extends 'base.html' %}
-{% block title %} YuTabe {% endblock %}
+{% load static %}
+{% block title %}История просмотров{% endblock %}
+
 {% block content %}
-<!-- Todo - Затычку на стили заменить на нормальные стили -->
-    <H1>Your history</H1>
-    <div>
-       {% if history %}
-      <ul>
-        {% for video in history %}
-        <li>
-            <div class="w-64 h-20">
-          <a href="{% url 'video_detail' video.video.pk %}">
-            {% if video.video.preview %}
-                <img
-                  src="{{ video.video.preview.url }}"
-                  alt="{{ video.video.title }}"
-                  class="w-full h-full object-cover">
-              {% else %}
-                <img
-                  src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"
-                  alt="Default preview"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                >
-              {% endif %}
-          </a>
-            </div>
-                        <p>Просмотренo: {{ video.viewed_at|date:"d.m.Y H:i"}}</p>
-        </li>
-        {% endfor %}
-      </ul>
-        {% else %}
-        <p>Вы ещё ничего не смотрели</p>
+<!-- К глубочайшему сожалению, мне не хочется щас придумывать велосипед и делать отдельный шаблон под все наши плейлисты с едиными стилями, поэтому мы по цыгански стырили оформление с video_list.html-->
+<div class="flex h-screen">
+    <aside id="sidebar" class="bg-gray-900 text-white w-64 h-full flex flex-col shadow-md transition-all duration-300 ease-in-out">
+    <div class="p-4 text-xl font-bold border-b border-gray-700">Меню</div>
+    <nav class="flex-1 p-2 space-y-2">
+      <a href="{% url 'video_list' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Главная</a>
+      <a href="{% url 'find_liked_video' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Понравившиеся</a>
+      <a href="{% url 'viewing_history' %}" class="block px-4 py-2 rounded hover:bg-gray-800">История</a>
+      <a href="{% url 'watch_later' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Смотреть позже</a>
+      <a href="{% url 'user_videos' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Ваши видео</a>
+      <a href="{% url 'user_playlists' profile.user.id%}" class="block px-4 py-2 rounded hover:bg-gray-800">Ваши плейлисты</a>
+    </nav>
+    <button id="toggleBtn"
+      class="absolute top-1/2 transform -translate-y-1/5 translate-x-1/2 bg-gray-800 hover:bg-gray-700 text-sm rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 transition-transform duration-300 hover:scale-110">
+      ↔
+    </button>
+  </aside>
+<main class="bg-gradient-to-b from-gray-900 to-black text-white flex-1 overflow-auto">
+    <!-- Заголовок -->
+    <div class="container mx-auto px-4 py-8">
+      <h1 class="text-3xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+        История просмотров
+      </h1>
+
+      <!-- Список видео из истории -->
+      {% if history %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 video-grid">
+          {% for video in history %}
+            <a href="{% url 'video_detail' video.video.pk %}" class="block group">
+              <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl border border-gray-700">
+                <div class="aspect-video w-full overflow-hidden">
+                  {% if video.video.preview %}
+                    <img src="{{ video.video.preview.url }}" alt="{{ video.video.title }}" class="w-full h-full object-cover">
+                  {% else %}
+                    <img src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"  alt="Default preview" class="w-full h-full object-cover" loading="lazy">
+                  {% endif %}
+                </div>
+                <div class="p-4">
+                  <h2 class="text-white text-lg font-bold group-hover:text-pink-500 transition">{{ video.video.title }}</h2>
+                  <p class="text-gray-400 text-sm mt-1">Просмотрено: {{ video.viewed_at|date:"d.m.Y H:i" }}</p>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-12">
+          <p class="text-gray-400 text-lg">Вы ещё ничего не смотрели.</p>
+        </div>
       {% endif %}
     </div>
+</main>
+</div>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleBtn');
+
+  let isCollapsed = false;
+
+  toggleBtn.addEventListener('click', () => {
+    if (!isCollapsed) {
+      // Сворачиваем
+      sidebar.classList.add('w-0');
+      sidebar.classList.remove('w-64');
+    } else {
+      // Разворачиваем
+      sidebar.classList.add('w-64');
+      sidebar.classList.remove('w-0');
+    }
+    isCollapsed = !isCollapsed;
+  });
+</script>
 {% endblock %}

@@ -32,7 +32,7 @@ class VideoUploadTest(TestCase):
         # Заполнить форму с данными
         data = {
             'title': 'Test Video Title',
-            'author': self.user.id,  # Используем ID пользователя, а не объект
+            'author': self.user,
             'video_file': test_video
         }
 

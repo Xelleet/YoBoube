@@ -31,7 +31,7 @@ def video_list(request):
     return render(request, 'video_list.html', {'videos': videos, 'reels': reels, 'profile': profile, 'search_history': search_history, 'categories': Category.objects.all(), 'unread_count': unread_count})
 
 def reels_list(request):
-    reels = Video.objects.filter(is_short=True)
+    reels = Video.objects.filter(is_short=True, deleted=False).select_related('uploader')
     try:
         profile = Profile.objects.get(user=request.user)
     except:
@@ -116,7 +116,7 @@ def edit_profile(request):
             return redirect('user_profile', user_id=profile.id)
     else:
         form = ProfileForm()
-    return render(request, 'edit_profile.html', {'form': form})
+    return render(request, 'edit_profile.html', {'form': form, 'profile': Profile.objects.get(user=request.user)})
 
 #Лепим лайки
 @csrf_exempt #Временно
@@ -203,7 +203,7 @@ def video_detail(request, pk):
                 F('likes_count') - F('dislikes_count') + WEIGHT_VIEWS * F('views'),
                 output_field=FloatField()
             )
-        ).order_by('-rating').filter(is_short=False)[:10]
+        ).order_by('-rating').filter(is_short=False, deleted=False)[:10]
         #Проверяем, поставили ли мы уже реакцию на видео
         try:
             like = Like.objects.get(user_id=request.user.id, video_id=pk)
@@ -282,7 +282,7 @@ def find_liked_video(request):
     videos_id = Like.objects.filter(user=request.user).values_list('video_id')
     videos = Video.objects.filter(id__in=videos_id)
 
-    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user), 'is_liked_videos': True})
 
 @login_required
 @never_cache
@@ -295,6 +295,7 @@ def viewing_history(request):
         'user': user,
         'total_views': history.count(),
         'last_viewed': history.first().viewed_at if history.exists() else None,
+        'profile': Profile.objects.get(user=request.user),
     }
 
     return render(request, 'video_history.html', context)
@@ -302,7 +303,7 @@ def viewing_history(request):
 @login_required()
 def user_videos(request):
     videos = Video.objects.filter(uploader=request.user)
-    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user), 'is_user_videos': True})
 
 @login_required()
 def toggle_watch_later(request, video_id):
@@ -321,7 +322,7 @@ def toggle_watch_later(request, video_id):
 def watch_later_list(request):
     videos_id = WatchLater.objects.filter(user=request.user).select_related('video').values_list('video_id')
     videos = Video.objects.filter(id__in=videos_id)
-    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user)})
+    return render(request, 'video_list.html', {'videos': videos, 'profile': Profile.objects.get(user=request.user), 'is_watch_later': True})
 
 
 def clear_search_history(request):

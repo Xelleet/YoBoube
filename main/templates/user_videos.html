@@ -1,21 +1,63 @@
-{% extends 'base.html' %}
-{% block title %} YuTabe {% endblock %}
+{% extends "base.html" %}
+{% block title %}Посмотрю позже{% endblock %}
+{% load static %}
+
 {% block content %}
-    <div>
-        {% if videos %}
-        <ul>
-            {% for video in videos %}
-            <li>
-                <a href="{% url 'video_detail' video.pk %}">
-                <video controls>
-                    <source src="{{ video.video_file.url}}" type="video/mp4">
-                </video>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-            <p>Вы ещё не загрузили ни одного видео</p>
-        {% endif %}
+<!-- Контейнер страницы -->
+<div class="flex h-screen">
+  <!-- Основной контент -->
+  <main class="bg-gradient-to-b from-gray-900 to-black text-white flex-1 overflow-auto">
+    <div class="container mx-auto px-4 py-8">
+      <h2 class="text-3xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+        Посмотрю позже
+      </h2>
+
+      {% if videos %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 video-grid">
+          {% for item in videos %}
+            <a href="{% url 'video_detail' item.video.pk %}" class="block group">
+              <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl video-card border border-gray-700">
+                <div class="aspect-video w-full overflow-hidden">
+                  {% if item.video.deleted %}
+                    <img src="https://avatars.mds.yandex.net/i?id=27e7981b69dd1b13655dbddc67c125e9309813b3-9067403-images-thumbs&n=13"
+                         alt="{{ item.video.title }}" class="w-full h-full object-cover">
+                  {% elif item.video.preview %}
+                    <img src="{{ item.video.preview.url }}" alt="{{ item.video.title }}" class="w-full h-full object-cover">
+                  {% else %}
+                    <img src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"
+                         alt="Default preview" class="w-full h-full object-cover" loading="lazy">
+                  {% endif %}
+                </div>
+                <div class="p-4">
+                  <h2 class="text-white text-xl font-bold group-hover:text-pink-500 transition">{{ item.video.title }}</h2>
+                  {% if item.video.uploader.profile.avatar %}
+                    <img src="{{ item.video.uploader.profile.avatar.url }}"
+                         class="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm hover:shadow-md transition-shadow">
+                  {% endif %}
+                  <h3 class="text-indigo-300 text-sm mt-1">{{ item.video.uploader }}</h3>
+                  <div class="text-gray-400 text-xs mt-2 video-meta">
+                    {{ item.video.get_views }} просмотров • {{ item.video.get_uploaded_at }}
+                  </div>
+                </div>
+              </div>
+            </a>
+
+            <!-- Форма удаления поверх видео -->
+            <form action="{% url 'toggle_watch_later' item.video.id %}" method="POST" class="absolute top-2 right-2">
+              {% csrf_token %}
+              <button type="submit"
+                      class="px-3 py-1 text-xs font-medium bg-red-600 hover:bg-red-700 text-white rounded-full shadow transition-colors">
+                Удалить
+              </button>
+            </form>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-12">
+          <p class="text-gray-400 text-lg">Вы ещё ничего не добавили.</p>
+        </div>
+      {% endif %}
     </div>
+  </main>
+</div>
 {% endblock %}
