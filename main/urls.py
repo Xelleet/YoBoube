@@ -37,5 +37,6 @@ urlpatterns = [
     path('playlists/create/', views.create_playlist, name='create_playlist'),
     path('playlists/<int:playlist_id>', views.view_playlist, name='view_playlist'),
     path('playlists/add/<int:video_id>/', views.add_to_playlist, name='add_to_playlist'),
-    path('user_playlists/<int:user_id>', views.user_playlists, name='user_playlists')
+    path('user_playlists/<int:user_id>', views.user_playlists, name='user_playlists'),
+    path('hide_video/<int:video_id>/', views.hide_video, name='hide_video')
 ]

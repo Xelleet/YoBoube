@@ -1,17 +1,74 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block title %} Уведомления {% endblock %}
 {% block content %}
-<h2>Уведомления</h2>
-{% if notifications %}
-    <ul>
-        {% for notification in notifications %}
-            <li class="notification {% if not notifications.is_read% }unread{% endif %">
-                <p>{{notification.message}}</p>
-                <small>{{ notification.created_at|timesince}} назад</small>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'mark_all_as_read' %}">Прочитать всё</a>
-{% else %}
-    <p>Нет новых умедомлений</p>
-{% endif %}
+<!-- Контейнер страницы -->
+<div class="flex h-screen">
+  <!-- Боковое меню -->
+  <aside id="sidebar" class="bg-gray-900 text-white w-64 h-full flex flex-col shadow-md transition-all duration-300 ease-in-out">
+    <div class="p-4 text-xl font-bold border-b border-gray-700">Меню</div>
+    <nav class="flex-1 p-2 space-y-2">
+      <a href="{% url 'video_list' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Главная</a>
+      <a href="{% url 'find_liked_video' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Понравившиеся</a>
+      <a href="{% url 'viewing_history' %}" class="block px-4 py-2 rounded hover:bg-gray-800">История</a>
+      <a href="{% url 'watch_later' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Смотреть позже</a>
+      <a href="{% url 'user_videos' %}" class="block px-4 py-2 rounded hover:bg-gray-800">Ваши видео</a>
+      <a href="{% url 'user_playlists' profile.user.id%}" class="block px-4 py-2 rounded hover:bg-gray-800">Ваши плейлисты</a>
+    </nav>
+    <button id="toggleBtn"
+      class="absolute top-1/2 transform -translate-y-1/5 translate-x-1/2 bg-gray-800 hover:bg-gray-700 text-sm rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 transition-transform duration-300 hover:scale-110">
+      ↔
+    </button>
+  </aside>
+
+  <!-- Основной контент -->
+  <main class="bg-gradient-to-b from-gray-900 to-black text-white flex-1 overflow-auto">
+    <div class="container mx-auto px-4 py-8">
+      <h2 class="text-3xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+        Уведомления
+      </h2>
+
+      {% if notifications %}
+        <div class="max-w-2xl mx-auto space-y-4">
+          {% for notification in notifications %}
+            <div class="bg-gray-800 p-4 rounded-lg shadow-md border-l-4 {% if not notification.is_read %}border-pink-500{% else %}border-gray-600{% endif %} transition-all duration-300 hover:shadow-lg">
+              <p class="text-white">{{ notification.message }}</p>
+              <small class="text-gray-400 mt-1">{{ notification.created_at|timesince }} назад</small>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-6 text-center">
+          <a href="{% url 'mark_all_as_read' %}"
+             class="inline-block py-2 px-6 bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:scale-105">
+            Прочитать всё
+          </a>
+        </div>
+      {% else %}
+        <div class="text-center py-12">
+          <p class="text-gray-400 text-lg">Нет новых уведомлений.</p>
+        </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+<!-- JavaScript для переключения бокового меню -->
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleBtn');
+  let isCollapsed = false;
+  toggleBtn.addEventListener('click', () => {
+    if (!isCollapsed) {
+      // Сворачиваем
+      sidebar.classList.add('w-0');
+      sidebar.classList.remove('w-64');
+    } else {
+      // Разворачиваем
+      sidebar.classList.add('w-64');
+      sidebar.classList.remove('w-0');
+    }
+    isCollapsed = !isCollapsed;
+  });
+</script>
 {% endblock %}

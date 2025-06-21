@@ -49,34 +49,32 @@ def upload_video(request):
 
             video.uploader = request.user
 
-            with open(temp_path, 'wb+') as destination:
-                for chunk in video.chunks():
-                    destination.write(chunk)
-
-            try:
-                info = FFProbe(temp_path)
-                duration = None
-
-                for stream in info.streams:
-                    if stream.is_video():
-                        duration = float(stream.duration_seconds())
-                        print(f"Duration: {duration}s")  # Для отладки
-
-                        if duration > 60:
-                            form.instance.is_short = False
-                        else:
-                            form.instance.is_short = True
-                        break
-
-                if duration is None:
-                    raise ValueError("Видеопоток не найден в файле")
-
-            except Exception as e:
-                print(f"Reels error: {e}")
-
-            finally:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+            tags_str = form.cleaned_data.get('tags', '')
+            if tags_str:
+                tag_names = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
+                if "#shorts" in tag_names:
+                    with open(temp_path, 'wb+') as destination:
+                        for chunk in video.chunks():
+                            destination.write(chunk)
+                    try:
+                        info = FFProbe(temp_path)
+                        duration = None
+                        for stream in info.streams:
+                            if stream.is_video():
+                                duration = float(stream.duration_seconds())
+                                print(f"Duration: {duration}s")  # Для отладки
+                                if duration > 60:
+                                    form.instance.is_short = False
+                                else:
+                                    form.instance.is_short = True
+                                break
+                        if duration is None:
+                            raise ValueError("Видеопоток не найден в файле")
+                    except Exception as e:
+                        print(f"Reels error: {e}")
+                    finally:
+                        if os.path.exists(temp_path):
+                            os.remove(temp_path)
 
             form.instance.uploader = request.user
             form.save()
@@ -246,7 +244,7 @@ def reel(request, pk):
 def search_videos(request):
     query = request.GET.get('q')
     if query:
-        videos = Video.objects.filter(title__icontains=query).annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
+        videos = Video.objects.filter(title__icontains=query, deleted=False).annotate(rating=F('likes_count') - F('dislikes_count')).order_by('-rating')
 
         if request.user.is_authenticated:
             SearchHistory.objects.create(user=request.user, query=query)
@@ -289,7 +287,6 @@ def find_liked_video(request):
 def viewing_history(request):
     user = request.user
     history = VideoView.objects.filter(user=user).select_related('video').order_by('-viewed_at')[:50]
-    print(history)
     context = {
         'history': history,
         'user': user,
@@ -337,7 +334,7 @@ def search_by_category(request, id):
 @login_required()
 def notifications(request):
     notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at').update(is_read=True)
-    return render(request, 'notifications.html', {'notifications': notifications_list})
+    return render(request, 'notifications.html', {'notifications': notifications_list, 'profile': Profile.objects.get(user=request.user)})
 
 @login_required()
 def mark_all_as_read(request):
@@ -465,9 +462,11 @@ def user_playlists(request, user_id):
     playlists = PlayList.objects.filter(user=User.objects.get(id=user_id))
     return render(request, 'user_playlist.html', {'playlists': playlists, 'profile': Profile.objects.get(user=request.user), 'is_user_playlist': request.user == User.objects.get(id=user_id)})
 
-def hide_video(video):
+def hide_video(request, video_id):
+    video = get_object_or_404(Video, id=video_id)
     video.deleted = True
     video.save()
+    return redirect('video_list')
 
 def delete_video(video):
     video_name = video.video_file.name

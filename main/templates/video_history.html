@@ -33,11 +33,27 @@
           {% for video in history %}
             <a href="{% url 'video_detail' video.video.pk %}" class="block group">
               <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl border border-gray-700">
-                <div class="aspect-video w-full overflow-hidden">
-                  {% if video.video.preview %}
-                    <img src="{{ video.video.preview.url }}" alt="{{ video.video.title }}" class="w-full h-full object-cover">
+                    <div class="aspect-video w-full overflow-hidden">
+                      {% if video.deleted %}
+                  <img
+                      src="https://avatars.mds.yandex.net/i?id=27e7981b69dd1b13655dbddc67c125e9309813b3-9067403-images-thumbs&n=13"
+                      alt="{{ video.title }}"
+                      class="w-full h-full object-cover"
+                  >
+                  {% endif %}
+                  {% if video.preview %}
+                  <img
+                      src="{{ video.preview.url }}"
+                      alt="{{ video.title }}"
+                      class="w-full h-full object-cover"
+                  >
                   {% else %}
-                    <img src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"  alt="Default preview" class="w-full h-full object-cover" loading="lazy">
+                    <img
+                      src="https://i.ytimg.com/vi/LYou0Ednqvg/maxresdefault.jpg"
+                      alt="Default preview"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    >
                   {% endif %}
                 </div>
                 <div class="p-4">

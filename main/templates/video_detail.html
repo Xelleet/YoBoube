@@ -133,7 +133,7 @@
 
     {% if video.uploader == profile.user %}
       <div class="mt-6">
-        <a href="{% url 'delete_video' video.pk %}"
+        <<a href="{% url 'hide_video' video.id %}"
            class="text-red-500 hover:text-red-400 underline text-sm">Удалить видео</a>
       </div>
     {% endif %}
